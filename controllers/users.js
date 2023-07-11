@@ -34,11 +34,11 @@ const createUser = async (req, res) => {
     res.status(201).json(user);
   } catch (error) {
     if (error.name === 'SomeErrorName') {
-      return res.status(ERROR_CODE).json({ error: 'Переданы некорректные данные при создание пользователя' });
+      res.status(ERROR_CODE).json({ error: 'Переданы некорректные данные при создание пользователя' });
+    } else {
+      res.status(500).json({ error: 'На сервере произошла ошибка' });
     }
-    return res.status(500).json({ error: 'На сервере произошла ошибка' });
   }
-  return res;
 };
 
 const updateUserProfile = async (req, res) => {
