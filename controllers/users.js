@@ -27,22 +27,18 @@ const getUserById = async (req, res) => {
   return res;
 };
 
-const createUser = async (req, res) => {
+const createUser = (req, res) => {
   const { name, about, avatar } = req.body;
-  try {
-    if (name.length < 2) {
-      return res.status(ERROR_CODE).json({ error: 'Переданы некорректные данные при создании пользователя' });
-    }
-
-    if (name.length > 30) {
-      return res.status(ERROR_CODE).json({ error: 'Имя пользователя должно содержать не более 30 символов' });
-    }
-
-    const user = await User.create({ name, about, avatar });
-    res.status(201).json(user);
-  } catch (error) {
-    res.status(500).json({ error: 'На сервере произошла ошибка' });
-  }
+  User.create({ name, about, avatar })
+    .then((user) => {
+      res.status(201).json(user);
+    })
+    .catch((error) => {
+      if (error.name === 'SomeErrorName') {
+        return res.status(ERROR_CODE).json({ error: 'Переданы некорректные данные при создании пользователя' });
+      }
+      return res.status(500).json({ error: 'На сервере произошла ошибка' });
+    });
 };
 
 const updateUserProfile = async (req, res) => {
