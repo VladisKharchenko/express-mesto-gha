@@ -34,7 +34,7 @@ const createUser = (req, res) => {
       res.status(201).json(user);
     })
     .catch((error) => {
-      if (error.name === 'SomeErrorName') {
+      if (error.name === 'ValidationError') {
         return res.status(ERROR_CODE).json({ error: 'Переданы некорректные данные при создании пользователя' });
       }
       return res.status(500).json({ error: 'На сервере произошла ошибка' });
