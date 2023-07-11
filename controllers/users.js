@@ -18,14 +18,14 @@ const getUserById = async (req, res) => {
     if (!user) {
       return res
         .status(404)
-        .json({ error: 'Пользователь по указанному _id не найден' });
+        .json({ message: 'Пользователь по указанному _id не найден' });
     }
     res.json(user);
   } catch (error) {
     if (error.name === 'CastError') {
       return res
         .status(ERROR_CODE)
-        .json({ error: 'Некорректный формат _id пользователя' });
+        .json({ message: 'Некорректный формат _id пользователя' });
     }
     res.status(500).json({ error: 'На сервере произошла ошибка' });
   }
@@ -54,21 +54,19 @@ const updateUserProfile = async (req, res) => {
     const user = await User.findByIdAndUpdate(
       req.user._id,
       { name, about },
-      { new: true },
+      { new: true, runValidators: true },
     );
+    if (!user) {
+      return res.status(404).json({ message: 'Пользователь с указанным _id не найден' });
+    }
     res.json(user);
   } catch (error) {
     if (error.name === 'ValidationError') {
-      return res
-        .status(ERROR_CODE)
-        .json({ message: 'Переданы некорректные данные при обновлении профиля' });
+      return res.status(ERROR_CODE).json({
+        message: 'Переданы некорректные данные при создании пользователя',
+      });
     }
-    if (error.name === 'CastError') {
-      return res
-        .status(404)
-        .json({ message: 'Пользователь с указанным _id не найден' });
-    }
-    res.status(500).json({ error: 'На сервере произошла ошибка' });
+    return res.status(500).json({ error: 'На сервере произошла ошибка' });
   }
   return res;
 };
