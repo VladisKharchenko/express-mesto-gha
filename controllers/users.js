@@ -15,12 +15,17 @@ const getUserById = async (req, res) => {
   const { userId } = req.params;
   try {
     const user = await User.findById(userId);
+    if (!user) {
+      return res
+        .status(404)
+        .json({ error: 'Пользователь по указанному _id не найден' });
+    }
     res.json(user);
   } catch (error) {
     if (error.name === 'CastError') {
       return res
         .status(ERROR_CODE)
-        .json({ message: 'Пользователь по указанному _id не найден' });
+        .json({ error: 'Некорректный формат _id пользователя' });
     }
     res.status(500).json({ error: 'На сервере произошла ошибка' });
   }
