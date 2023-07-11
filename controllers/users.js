@@ -36,7 +36,7 @@ const createUser = async (req, res) => {
     if (error.name === 'SomeErrorName') {
       return res.status(ERROR_CODE).json({ error: 'Переданы некорректные данные при создание пользователя' });
     }
-    res.status(500).json({ error: 'На сервере произошла ошибка' });
+    return res.status(500).json({ error: 'На сервере произошла ошибка' });
   }
   return res;
 };
