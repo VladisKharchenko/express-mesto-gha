@@ -1,5 +1,6 @@
 const User = require('../models/user');
 
+const CREATED_SUCCESSFULLY = 201;
 const BAD_REQUEST = 400;
 const NOT_FOUND = 404;
 const SERVER_ERROR = 500;
@@ -22,23 +23,22 @@ const getUserById = async (req, res) => {
         .status(NOT_FOUND)
         .json({ message: 'Пользователь по указанному _id не найден' });
     }
-    res.json(user);
+    return res.json(user);
   } catch (error) {
     if (error.name === 'CastError') {
       return res
         .status(BAD_REQUEST)
         .json({ message: 'Некорректный формат _id пользователя' });
     }
-    res.status(SERVER_ERROR).json({ error: 'На сервере произошла ошибка' });
+    return res.status(SERVER_ERROR).json({ error: 'На сервере произошла ошибка' });
   }
-  return res;
 };
 
 const createUser = async (req, res) => {
   const { name, about, avatar } = req.body;
   try {
     const user = await User.create({ name, about, avatar });
-    res.status(201).json(user);
+    return res.status(CREATED_SUCCESSFULLY).json(user);
   } catch (error) {
     if (error.name === 'ValidationError') {
       return res.status(BAD_REQUEST).json({
@@ -47,7 +47,6 @@ const createUser = async (req, res) => {
     }
     return res.status(SERVER_ERROR).json({ error: 'На сервере произошла ошибка' });
   }
-  return res;
 };
 
 const updateUserProfile = async (req, res) => {
@@ -61,7 +60,7 @@ const updateUserProfile = async (req, res) => {
     if (!user) {
       return res.status(NOT_FOUND).json({ message: 'Пользователь с указанным _id не найден' });
     }
-    res.json(user);
+    return res.json(user);
   } catch (error) {
     if (error.name === 'ValidationError') {
       return res.status(BAD_REQUEST).json({
@@ -70,7 +69,6 @@ const updateUserProfile = async (req, res) => {
     }
     return res.status(SERVER_ERROR).json({ error: 'На сервере произошла ошибка' });
   }
-  return res;
 };
 
 const updateUserAvatar = async (req, res) => {
@@ -85,18 +83,22 @@ const updateUserAvatar = async (req, res) => {
     const user = await User.findByIdAndUpdate(
       req.user._id,
       { avatar },
-      { new: true },
+      { new: true, runValidators: true },
     );
     if (!user) {
       return res
         .status(NOT_FOUND)
         .json({ error: 'Пользователь с указанным _id не найден' });
     }
-    res.json(user);
+    return res.json(user);
   } catch (error) {
-    res.status(SERVER_ERROR).json({ error: 'На сервере произошла ошибка' });
+    if (error.name === 'ValidationError') {
+      return res
+        .status(BAD_REQUEST)
+        .json({ error: 'Ошибка валидации данных при обновлении аватара' });
+    }
+    return res.status(SERVER_ERROR).json({ error: 'На сервере произошла ошибка' });
   }
-  return res;
 };
 
 module.exports = {

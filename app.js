@@ -3,6 +3,8 @@ const mongoose = require('mongoose');
 const userRoutes = require('./routes/users');
 const cardRoutes = require('./routes/cards');
 
+const NOT_FOUND = 404;
+
 const app = express();
 const port = 3000;
 
@@ -26,7 +28,7 @@ app.use('/', userRoutes);
 app.use('/', cardRoutes);
 
 app.use((req, res) => {
-  res.status(404).json({ message: 'Неправильный путь' });
+  res.status(NOT_FOUND).json({ message: 'Неправильный путь' });
 });
 
 app.listen(port);

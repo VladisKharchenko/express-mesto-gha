@@ -1,5 +1,6 @@
 const Card = require('../models/card');
 
+const CREATED_SUCCESSFULLY = 201;
 const BAD_REQUEST = 400;
 const NOT_FOUND = 404;
 const SERVER_ERROR = 500;
@@ -18,7 +19,7 @@ const createCard = async (req, res) => {
   const { _id: owner } = req.user;
   try {
     const card = await Card.create({ name, link, owner });
-    res.status(201).json(card);
+    return res.status(CREATED_SUCCESSFULLY).json(card);
   } catch (error) {
     if (error.name === 'ValidationError') {
       return res.status(BAD_REQUEST).json({
@@ -27,7 +28,6 @@ const createCard = async (req, res) => {
     }
     return res.status(SERVER_ERROR).json({ error: 'На сервере произошла ошибка' });
   }
-  return res;
 };
 
 const deleteCard = async (req, res) => {
@@ -39,16 +39,15 @@ const deleteCard = async (req, res) => {
         .status(NOT_FOUND)
         .json({ message: 'Карточка с указанным _id не найдена' });
     }
-    res.json({ message: 'Карточка успешно удалена' });
+    return res.json({ message: 'Карточка успешно удалена' });
   } catch (error) {
     if (error.name === 'CastError') {
       return res
         .status(BAD_REQUEST)
         .json({ message: 'Переданы некорректные данные для удаления карточки' });
     }
-    res.status(SERVER_ERROR).json({ error: 'На сервере произошла ошибка' });
+    return res.status(SERVER_ERROR).json({ error: 'На сервере произошла ошибка' });
   }
-  return res;
 };
 
 const likeCard = async (req, res) => {
@@ -63,16 +62,15 @@ const likeCard = async (req, res) => {
         .status(NOT_FOUND)
         .json({ message: 'Передан несуществующий _id карточки' });
     }
-    res.json(card);
+    return res.json(card);
   } catch (error) {
     if (error.name === 'CastError') {
       return res
         .status(BAD_REQUEST)
         .json({ message: 'Переданы некорректные данные для постановки лайка' });
     }
-    res.status(SERVER_ERROR).json({ error: 'На сервере произошла ошибка' });
+    return res.status(SERVER_ERROR).json({ error: 'На сервере произошла ошибка' });
   }
-  return res;
 };
 
 const dislikeCard = async (req, res) => {
@@ -87,16 +85,15 @@ const dislikeCard = async (req, res) => {
         .status(NOT_FOUND)
         .json({ message: 'Передан несуществующий _id карточки' });
     }
-    res.json(card);
+    return res.json(card);
   } catch (error) {
     if (error.name === 'CastError') {
       return res
         .status(BAD_REQUEST)
         .json({ message: 'Переданы некорректные данные для снятия лайка' });
     }
-    res.status(SERVER_ERROR).json({ error: 'На сервере произошла ошибка' });
+    return res.status(SERVER_ERROR).json({ error: 'На сервере произошла ошибка' });
   }
-  return res;
 };
 
 module.exports = {
