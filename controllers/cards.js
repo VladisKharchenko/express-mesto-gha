@@ -41,6 +41,11 @@ const deleteCard = async (req, res) => {
     }
     res.json({ message: 'Карточка успешно удалена' });
   } catch (error) {
+    if (error.name === 'CastError') {
+      return res
+        .status(BAD_REQUEST)
+        .json({ message: 'Переданы некорректные данные для удаления карточки' });
+    }
     res.status(SERVER_ERROR).json({ error: 'На сервере произошла ошибка' });
   }
   return res;
@@ -51,7 +56,7 @@ const likeCard = async (req, res) => {
     const card = await Card.findByIdAndUpdate(
       req.params.cardId,
       { $addToSet: { likes: req.user._id } },
-      { new: true, runValidators: true },
+      { new: true },
     );
     if (!card) {
       return res
@@ -60,7 +65,7 @@ const likeCard = async (req, res) => {
     }
     res.json(card);
   } catch (error) {
-    if (error.name === 'ValidationError') {
+    if (error.name === 'CastError') {
       return res
         .status(BAD_REQUEST)
         .json({ message: 'Переданы некорректные данные для постановки лайка' });
@@ -75,7 +80,7 @@ const dislikeCard = async (req, res) => {
     const card = await Card.findByIdAndUpdate(
       req.params.cardId,
       { $pull: { likes: req.user._id } },
-      { new: true, runValidators: true },
+      { new: true },
     );
     if (!card) {
       return res
@@ -84,7 +89,7 @@ const dislikeCard = async (req, res) => {
     }
     res.json(card);
   } catch (error) {
-    if (error.name === 'ValidationError') {
+    if (error.name === 'CastError') {
       return res
         .status(BAD_REQUEST)
         .json({ message: 'Переданы некорректные данные для снятия лайка' });
