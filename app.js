@@ -13,6 +13,7 @@ mongoose.connect('mongodb://127.0.0.1:27017/mestodb', {
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
 app.use((req, res, next) => {
   req.user = {
     _id: '64ac0050d50f7890d6ea4a68',
@@ -20,10 +21,12 @@ app.use((req, res, next) => {
 
   next();
 });
+
 app.use('/', userRoutes);
 app.use('/', cardRoutes);
 
-app.listen(port, () => {
-  const message = `Сервер запущен на порту ${port}`;
-  process.stdout.write(`${message}\n`);
+app.use((req, res) => {
+  res.status(404).json({ message: 'Неправильный путь' });
 });
+
+app.listen(port);
