@@ -1,7 +1,7 @@
 const User = require('../models/user');
 
 const CREATED_SUCCESSFULLY = 201;
-//const BAD_REQUEST = 400;
+const BAD_REQUEST = 400;
 const NOT_FOUND = 404;
 const SERVER_ERROR = 500;
 
@@ -25,6 +25,11 @@ const getUserById = async (req, res) => {
     }
     return res.json(user);
   } catch (error) {
+    if (error.name === 'CastError') {
+      return res
+        .status(BAD_REQUEST)
+        .json({ message: 'Некорректный формат _id пользователя' });
+    }
     return res.status(SERVER_ERROR).json({ error: 'На сервере произошла ошибка' });
   }
 };
@@ -35,6 +40,11 @@ const createUser = async (req, res) => {
     const user = await User.create({ name, about, avatar });
     return res.status(CREATED_SUCCESSFULLY).json(user);
   } catch (error) {
+    if (error.name === 'ValidationError') {
+      return res.status(BAD_REQUEST).json({
+        message: 'Переданы некорректные данные при создании пользователя',
+      });
+    }
     return res.status(SERVER_ERROR).json({ error: 'На сервере произошла ошибка' });
   }
 };
@@ -52,6 +62,11 @@ const updateUserProfile = async (req, res) => {
     }
     return res.json(user);
   } catch (error) {
+    if (error.name === 'ValidationError') {
+      return res.status(BAD_REQUEST).json({
+        message: 'Переданы некорректные данные при создании пользователя',
+      });
+    }
     return res.status(SERVER_ERROR).json({ error: 'На сервере произошла ошибка' });
   }
 };
@@ -71,6 +86,11 @@ const updateUserAvatar = async (req, res) => {
     }
     return res.json(user);
   } catch (error) {
+    if (error.name === 'ValidationError') {
+      return res
+        .status(BAD_REQUEST)
+        .json({ error: 'Ошибка валидации данных при обновлении аватара' });
+    }
     return res.status(SERVER_ERROR).json({ error: 'На сервере произошла ошибка' });
   }
 };
