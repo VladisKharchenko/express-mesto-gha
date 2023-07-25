@@ -1,56 +1,51 @@
 const Card = require('../models/card');
 
 const CREATED_SUCCESSFULLY = 201;
-const BAD_REQUEST = 400;
+const UNAUTHORIZED = 401;
 const NOT_FOUND = 404;
-const SERVER_ERROR = 500;
 
-const getCards = async (req, res) => {
+const getCards = async (req, res, next) => {
   try {
     const cards = await Card.find();
-    res.json(cards);
+    return res.json(cards);
   } catch (error) {
-    res.status(SERVER_ERROR).json({ error: 'На сервере произошла ошибка' });
+    return next(error);
   }
 };
 
-const createCard = async (req, res) => {
+const createCard = async (req, res, next) => {
   const { name, link } = req.body;
   const { _id: owner } = req.user;
   try {
     const card = await Card.create({ name, link, owner });
     return res.status(CREATED_SUCCESSFULLY).json(card);
   } catch (error) {
-    if (error.name === 'ValidationError') {
-      return res.status(BAD_REQUEST).json({
-        message: 'Переданы некорректные данные при создании карточки',
-      });
-    }
-    return res.status(SERVER_ERROR).json({ error: 'На сервере произошла ошибка' });
+    return next(error);
   }
 };
 
-const deleteCard = async (req, res) => {
+const deleteCard = async (req, res, next) => {
   const { cardId } = req.params;
   try {
-    const card = await Card.findByIdAndDelete(cardId);
+    const card = await Card.findById(cardId);
     if (!card) {
       return res
         .status(NOT_FOUND)
         .json({ message: 'Карточка с указанным _id не найдена' });
     }
+    if (card.owner.toString() !== req.user._id) {
+      return res
+        .status(UNAUTHORIZED)
+        .json({ message: 'У вас нет прав для удаления этой карточки' });
+    }
+    await card.deleteOne();
     return res.json({ message: 'Карточка успешно удалена' });
   } catch (error) {
-    if (error.name === 'CastError') {
-      return res
-        .status(BAD_REQUEST)
-        .json({ message: 'Переданы некорректные данные для удаления карточки' });
-    }
-    return res.status(SERVER_ERROR).json({ error: 'На сервере произошла ошибка' });
+    return next(error);
   }
 };
 
-const likeCard = async (req, res) => {
+const likeCard = async (req, res, next) => {
   try {
     const card = await Card.findByIdAndUpdate(
       req.params.cardId,
@@ -64,16 +59,11 @@ const likeCard = async (req, res) => {
     }
     return res.json(card);
   } catch (error) {
-    if (error.name === 'CastError') {
-      return res
-        .status(BAD_REQUEST)
-        .json({ message: 'Переданы некорректные данные для постановки лайка' });
-    }
-    return res.status(SERVER_ERROR).json({ error: 'На сервере произошла ошибка' });
+    return next(error);
   }
 };
 
-const dislikeCard = async (req, res) => {
+const dislikeCard = async (req, res, next) => {
   try {
     const card = await Card.findByIdAndUpdate(
       req.params.cardId,
@@ -87,12 +77,7 @@ const dislikeCard = async (req, res) => {
     }
     return res.json(card);
   } catch (error) {
-    if (error.name === 'CastError') {
-      return res
-        .status(BAD_REQUEST)
-        .json({ message: 'Переданы некорректные данные для снятия лайка' });
-    }
-    return res.status(SERVER_ERROR).json({ error: 'На сервере произошла ошибка' });
+    return next(error);
   }
 };
 

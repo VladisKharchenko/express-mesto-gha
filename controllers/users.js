@@ -1,27 +1,28 @@
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
 const User = require('../models/user');
+const NotFoundError = require('../errors/not-found-err');
 
 const CREATED_SUCCESSFULLY = 201;
 const BAD_REQUEST = 400;
+const UNAUTHORIZED = 401;
 const NOT_FOUND = 404;
-const SERVER_ERROR = 500;
 
-const getUsers = async (req, res) => {
+const getUsers = async (req, res, next) => {
   try {
     const users = await User.find();
-    res.json(users);
+    return res.json(users);
   } catch (error) {
-    res.status(SERVER_ERROR).json({ error: 'На сервере произошла ошибка' });
+    return next(error);
   }
 };
 
-const getUserById = async (req, res) => {
+const getUserById = async (req, res, next) => {
   const { userId } = req.params;
   try {
     const user = await User.findById(userId);
     if (!user) {
-      return res
-        .status(NOT_FOUND)
-        .json({ message: 'Пользователь по указанному _id не найден' });
+      throw new NotFoundError('Пользователь с указанным _id не найден');
     }
     return res.json(user);
   } catch (error) {
@@ -30,26 +31,31 @@ const getUserById = async (req, res) => {
         .status(BAD_REQUEST)
         .json({ message: 'Некорректный формат _id пользователя' });
     }
-    return res.status(SERVER_ERROR).json({ error: 'На сервере произошла ошибка' });
+    return next(error);
   }
 };
 
-const createUser = async (req, res) => {
-  const { name, about, avatar } = req.body;
+const createUser = async (req, res, next) => {
+  const {
+    name, about, avatar, email, password,
+  } = req.body;
   try {
-    const user = await User.create({ name, about, avatar });
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+    const user = await User.create({
+      name,
+      about,
+      avatar,
+      email,
+      password: hashedPassword,
+    });
     return res.status(CREATED_SUCCESSFULLY).json(user);
   } catch (error) {
-    if (error.name === 'ValidationError') {
-      return res.status(BAD_REQUEST).json({
-        message: 'Переданы некорректные данные при создании пользователя',
-      });
-    }
-    return res.status(SERVER_ERROR).json({ error: 'На сервере произошла ошибка' });
+    return next(error);
   }
 };
 
-const updateUserProfile = async (req, res) => {
+const updateUserProfile = async (req, res, next) => {
   const { name, about } = req.body;
   try {
     const user = await User.findByIdAndUpdate(
@@ -58,20 +64,17 @@ const updateUserProfile = async (req, res) => {
       { new: true, runValidators: true },
     );
     if (!user) {
-      return res.status(NOT_FOUND).json({ message: 'Пользователь с указанным _id не найден' });
+      return res
+        .status(NOT_FOUND)
+        .json({ message: 'Пользователь с указанным _id не найден' });
     }
     return res.json(user);
   } catch (error) {
-    if (error.name === 'ValidationError') {
-      return res.status(BAD_REQUEST).json({
-        message: 'Переданы некорректные данные при создании пользователя',
-      });
-    }
-    return res.status(SERVER_ERROR).json({ error: 'На сервере произошла ошибка' });
+    return next(error);
   }
 };
 
-const updateUserAvatar = async (req, res) => {
+const updateUserAvatar = async (req, res, next) => {
   const { avatar } = req.body;
   try {
     const user = await User.findByIdAndUpdate(
@@ -86,12 +89,50 @@ const updateUserAvatar = async (req, res) => {
     }
     return res.json(user);
   } catch (error) {
-    if (error.name === 'ValidationError') {
+    return next(error);
+  }
+};
+
+const login = async (req, res, next) => {
+  const { email, password } = req.body;
+  try {
+    const user = await User.findOne({ email }).select('+password');
+
+    if (!user) {
       return res
-        .status(BAD_REQUEST)
-        .json({ error: 'Ошибка валидации данных при обновлении аватара' });
+        .status(UNAUTHORIZED)
+        .json({ message: 'Неправильные почта или пароль' });
     }
-    return res.status(SERVER_ERROR).json({ error: 'На сервере произошла ошибка' });
+
+    const passwordMatch = await bcrypt.compare(password, user.password);
+
+    if (!passwordMatch) {
+      return res
+        .status(UNAUTHORIZED)
+        .json({ message: 'Неправильные почта или пароль' });
+    }
+
+    const payload = { _id: user._id };
+
+    const token = jwt.sign(payload, 'some-secret-key', { expiresIn: '1w' });
+
+    res.cookie('jwt', token, { httpOnly: true, maxAge: 604800000 });
+
+    return res.send({ message: 'Всё верно!' });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+const getCurrentUser = async (req, res, next) => {
+  try {
+    const currentUser = await User.findById(req.user._id);
+    if (!currentUser) {
+      return res.status(NOT_FOUND).json({ message: 'Пользователь не найден' });
+    }
+    return res.json(currentUser);
+  } catch (error) {
+    return next(error);
   }
 };
 
@@ -101,4 +142,6 @@ module.exports = {
   createUser,
   updateUserProfile,
   updateUserAvatar,
+  login,
+  getCurrentUser,
 };
