@@ -28,11 +28,11 @@ app.post(
   celebrate({
     body: Joi.object()
       .keys({
-        name: Joi.string().min(2).max(30),
-        about: Joi.string().min(2).max(30),
+        name: Joi.string().min(2).max(30).required(),
+        about: Joi.string().min(2).max(30).required(),
         email: Joi.string().email().required(),
         password: Joi.string().min(8).required(),
-        avatar: Joi.string().uri(),
+        avatar: Joi.string().uri().required(),
       })
       .unknown(true),
   }),
