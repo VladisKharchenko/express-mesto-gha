@@ -1,8 +1,15 @@
 const handleErrors = (err, req, res, next) => {
-  const statusCode = err.statusCode || 500;
-  const message = statusCode === 500 ? 'На сервере произошла ошибка' : err.message;
-  res.status(statusCode).json({ message, err });
-  return next();
+  let statusCode = err.statusCode || 500;
+  let message = statusCode === 500 ? 'На сервере произошла ошибка' : err.message;
+
+  if (err.code === 11000) {
+    statusCode = 409;
+    message = 'Пользователь с таким email уже существует';
+  }
+
+  res.status(statusCode).send({ message, err });
+
+  next();
 };
 
 module.exports = handleErrors;

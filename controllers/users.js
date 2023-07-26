@@ -2,11 +2,11 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const User = require('../models/user');
 const NotFoundError = require('../errors/not-found-err');
+const CastError = require('../errors/cast-err');
+const ValidationError = require('../errors/validation-err');
+const UnauthorizedError = require('../errors/unauthorized-err');
 
 const CREATED_SUCCESSFULLY = 201;
-const BAD_REQUEST = 400;
-const UNAUTHORIZED = 401;
-const NOT_FOUND = 404;
 
 const getUsers = async (req, res, next) => {
   try {
@@ -27,9 +27,7 @@ const getUserById = async (req, res, next) => {
     return res.json(user);
   } catch (error) {
     if (error.name === 'CastError') {
-      return res
-        .status(BAD_REQUEST)
-        .json({ message: 'Некорректный формат _id пользователя' });
+      return next(new CastError('Некорректный формат _id пользователя'));
     }
     return next(error);
   }
@@ -37,7 +35,11 @@ const getUserById = async (req, res, next) => {
 
 const createUser = async (req, res, next) => {
   const {
-    name, about, avatar, email, password,
+    name,
+    about,
+    avatar,
+    email,
+    password,
   } = req.body;
   try {
     const salt = await bcrypt.genSalt(10);
@@ -51,6 +53,11 @@ const createUser = async (req, res, next) => {
     });
     return res.status(CREATED_SUCCESSFULLY).json(user);
   } catch (error) {
+    if (error.name === 'ValidationError') {
+      return next(
+        new ValidationError('Переданы некорректные данные при регистрации'),
+      );
+    }
     return next(error);
   }
 };
@@ -64,12 +71,15 @@ const updateUserProfile = async (req, res, next) => {
       { new: true, runValidators: true },
     );
     if (!user) {
-      return res
-        .status(NOT_FOUND)
-        .json({ message: 'Пользователь с указанным _id не найден' });
+      throw new NotFoundError('Пользователь с указанным _id не найден');
     }
     return res.json(user);
   } catch (error) {
+    if (error.name === 'ValidationError') {
+      return next(
+        new ValidationError('Ошибка валидации данных при обновлении профиля'),
+      );
+    }
     return next(error);
   }
 };
@@ -83,12 +93,15 @@ const updateUserAvatar = async (req, res, next) => {
       { new: true, runValidators: true },
     );
     if (!user) {
-      return res
-        .status(NOT_FOUND)
-        .json({ error: 'Пользователь с указанным _id не найден' });
+      throw new NotFoundError('Пользователь с указанным _id не найден');
     }
     return res.json(user);
   } catch (error) {
+    if (error.name === 'ValidationError') {
+      return next(
+        new ValidationError('Ошибка валидации данных при обновлении аватара'),
+      );
+    }
     return next(error);
   }
 };
@@ -99,17 +112,13 @@ const login = async (req, res, next) => {
     const user = await User.findOne({ email }).select('+password');
 
     if (!user) {
-      return res
-        .status(UNAUTHORIZED)
-        .json({ message: 'Неправильные почта или пароль' });
+      throw new UnauthorizedError('Неправильные почта или пароль');
     }
 
     const passwordMatch = await bcrypt.compare(password, user.password);
 
     if (!passwordMatch) {
-      return res
-        .status(UNAUTHORIZED)
-        .json({ message: 'Неправильные почта или пароль' });
+      throw new UnauthorizedError('Неправильные почта или пароль');
     }
 
     const payload = { _id: user._id };
@@ -128,7 +137,7 @@ const getCurrentUser = async (req, res, next) => {
   try {
     const currentUser = await User.findById(req.user._id);
     if (!currentUser) {
-      return res.status(NOT_FOUND).json({ message: 'Пользователь не найден' });
+      throw new NotFoundError('Пользователь не найден');
     }
     return res.json(currentUser);
   } catch (error) {

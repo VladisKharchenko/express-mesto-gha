@@ -1,5 +1,6 @@
 const express = require('express');
 const mongoose = require('mongoose');
+const { errors } = require('celebrate');
 const handleErrors = require('./middlewares/errorHandler');
 const userRoutes = require('./routes/users');
 const cardRoutes = require('./routes/cards');
@@ -27,10 +28,12 @@ app.use(authMiddleware);
 app.use('/', userRoutes);
 app.use('/', cardRoutes);
 
-app.use(handleErrors);
-
 app.use((req, res) => {
   res.status(NOT_FOUND).json({ message: 'Неправильный путь' });
 });
+
+app.use(errors());
+
+app.use(handleErrors);
 
 app.listen(port);
