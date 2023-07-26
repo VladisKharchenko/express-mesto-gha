@@ -33,7 +33,7 @@ router.patch(
   celebrate({
     body: Joi.object()
       .keys({
-        avatar: Joi.string().required(),
+        avatar: Joi.string().uri().regex(/^https?:\/\/[^\s/$.?#]+\.[^\s]*$/).required(),
       })
       .unknown(true),
   }),
