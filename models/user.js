@@ -5,7 +5,7 @@ function emailValidator(value) {
   return validator.isEmail(value);
 }
 
-const avatarRegex = /^https?:\/\/[^\s/$.?#]+$/;
+const avatarRegex = /^https?:\/\/[^\s/$.?#]+\.[^\s]*$/;
 
 const defaultName = 'Жак-Ив Кусто';
 const defaultAbout = 'Исследователь';
