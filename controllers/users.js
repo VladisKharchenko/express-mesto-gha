@@ -51,6 +51,8 @@ const createUser = async (req, res, next) => {
       email,
       password: hashedPassword,
     });
+
+    user.password = undefined;
     return res.status(CREATED_SUCCESSFULLY).json(user);
   } catch (error) {
     if (error.name === 'ValidationError') {
