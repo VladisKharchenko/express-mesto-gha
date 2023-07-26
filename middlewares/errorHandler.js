@@ -8,8 +8,6 @@ const handleErrors = (err, req, res, next) => {
   }
 
   res.status(statusCode).send({ message, err });
-
-  next();
 };
 
 module.exports = handleErrors;
