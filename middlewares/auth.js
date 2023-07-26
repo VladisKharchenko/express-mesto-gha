@@ -3,12 +3,17 @@ const UnauthorizedError = require('../errors/unauthorized-err');
 
 const authMiddleware = async (req, res, next) => {
   const token = req.cookies.jwt;
+
+  if (!token) {
+    return next(new UnauthorizedError('Отсутствует токен авторизации'));
+  }
+
   try {
     const payload = await jwt.verify(token, 'some-secret-key');
     req.user = payload;
     return next();
   } catch (error) {
-    return next(new UnauthorizedError('Что-то не так с токеном авторизации'));
+    return next(new UnauthorizedError('Неверный токен авторизации'));
   }
 };
 
