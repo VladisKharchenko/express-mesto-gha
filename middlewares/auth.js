@@ -2,13 +2,11 @@ const jwt = require('jsonwebtoken');
 const UnauthorizedError = require('../errors/unauthorized-err');
 
 const authMiddleware = async (req, res, next) => {
-  const { authorization } = req.headers;
+  const token = req.cookies.jwt;
 
-  if (!authorization || !authorization.startsWith('Bearer ')) {
+  if (!token) {
     return next(new UnauthorizedError('Отсутствует токен авторизации'));
   }
-
-  const token = authorization.replace('Bearer ', '');
 
   try {
     const payload = await jwt.verify(token, 'some-secret-key');
@@ -16,6 +14,7 @@ const authMiddleware = async (req, res, next) => {
   } catch (error) {
     return next(new UnauthorizedError('Неверный токен авторизации'));
   }
+
   return next();
 };
 
