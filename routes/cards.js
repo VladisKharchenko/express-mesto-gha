@@ -18,7 +18,7 @@ router.post(
     body: Joi.object()
       .keys({
         name: Joi.string().min(2).max(30).required(),
-        link: Joi.string().required(),
+        link: Joi.string().required().uri({ scheme: ['http', 'https'] }),
       })
       .unknown(true),
   }),
@@ -30,7 +30,7 @@ router.delete(
   celebrate({
     params: Joi.object()
       .keys({
-        cardId: Joi.string().required(),
+        cardId: Joi.string().hex().length(24).required(),
       })
       .unknown(true),
   }),
@@ -42,7 +42,7 @@ router.put(
   celebrate({
     params: Joi.object()
       .keys({
-        cardId: Joi.string().required(),
+        cardId: Joi.string().hex().length(24).required(),
       })
       .unknown(true),
   }),
@@ -54,7 +54,7 @@ router.delete(
   celebrate({
     params: Joi.object()
       .keys({
-        cardId: Joi.string().required(),
+        cardId: Joi.string().hex().length(24).required(),
       })
       .unknown(true),
   }),
