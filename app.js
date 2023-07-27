@@ -10,8 +10,6 @@ const { createUser, login } = require('./controllers/users');
 const authMiddleware = require('./middlewares/auth');
 const NotFoundError = require('./errors/not-found-err');
 
-const NOT_FOUND = 404;
-
 const app = express();
 app.use(cookieParser());
 const port = 3000;
@@ -35,7 +33,7 @@ app.post(
         about: Joi.string().min(2).max(30),
         email: Joi.string().email().required(),
         password: Joi.string().min(8).required(),
-        avatar: Joi.string().regex(urlRegex).required(),
+        avatar: Joi.string().regex(urlRegex),
       }),
   }),
   createUser,
