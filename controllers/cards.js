@@ -1,8 +1,8 @@
 const Card = require('../models/card');
 const ValidationError = require('../errors/validation-err');
 const NotFoundError = require('../errors/not-found-err');
-const UnauthorizedError = require('../errors/unauthorized-err');
 const CastError = require('../errors/cast-err');
+const ForbiddenError = require('../errors/forbidden-err');
 
 const CREATED_SUCCESSFULLY = 201;
 
@@ -39,7 +39,7 @@ const deleteCard = async (req, res, next) => {
       throw new NotFoundError('Карточка с указанным _id не найдена');
     }
     if (card.owner.toString() !== req.user._id) {
-      throw new UnauthorizedError('У вас нет прав для удаления этой карточки');
+      throw new ForbiddenError('У вас нет прав для удаления этой карточки');
     }
     await card.deleteOne();
     return res.json({ message: 'Карточка успешно удалена' });
