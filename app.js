@@ -32,7 +32,7 @@ app.post(
         about: Joi.string().min(2).max(30),
         email: Joi.string().email().required(),
         password: Joi.string().min(8).required(),
-        avatar: Joi.string().uri(),
+        avatar: Joi.string().uri({ scheme: ['http', 'https'] }),
       })
       .unknown(true),
   }),
