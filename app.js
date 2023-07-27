@@ -8,12 +8,15 @@ const userRoutes = require('./routes/users');
 const cardRoutes = require('./routes/cards');
 const { createUser, login } = require('./controllers/users');
 const authMiddleware = require('./middlewares/auth');
+const NotFoundError = require('./errors/not-found-err');
 
 const NOT_FOUND = 404;
 
 const app = express();
 app.use(cookieParser());
 const port = 3000;
+
+const urlRegex = /^https?:\/\/[^\s/$.?#]+\.[^\s]*$/;
 
 mongoose.connect('mongodb://127.0.0.1:27017/mestodb', {
   useNewUrlParser: true,
@@ -32,9 +35,8 @@ app.post(
         about: Joi.string().min(2).max(30),
         email: Joi.string().email().required(),
         password: Joi.string().min(8).required(),
-        avatar: Joi.string().uri({ scheme: ['http', 'https'] }),
-      })
-      .unknown(true),
+        avatar: Joi.string().regex(urlRegex).required(),
+      }),
   }),
   createUser,
 );
@@ -46,8 +48,7 @@ app.post(
       .keys({
         email: Joi.string().email().required(),
         password: Joi.string().required(),
-      })
-      .unknown(true),
+      }),
   }),
   login,
 );
@@ -57,8 +58,9 @@ app.use(authMiddleware);
 app.use('/', userRoutes);
 app.use('/', cardRoutes);
 
-app.use((req, res) => {
-  res.status(NOT_FOUND).json({ message: 'Неправильный путь' });
+app.use((req, res, next) => {
+  const err = new NotFoundError('Неправильный путь');
+  next(err);
 });
 
 app.use(errors());

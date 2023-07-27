@@ -1,7 +1,6 @@
 const Card = require('../models/card');
-const ValidationError = require('../errors/validation-err');
+const CustomError = require('../errors/custom-err');
 const NotFoundError = require('../errors/not-found-err');
-const CastError = require('../errors/cast-err');
 const ForbiddenError = require('../errors/forbidden-err');
 
 const CREATED_SUCCESSFULLY = 201;
@@ -24,7 +23,7 @@ const createCard = async (req, res, next) => {
   } catch (error) {
     if (error.name === 'ValidationError') {
       return next(
-        new ValidationError('Переданы некорректные данные при создании карточки'),
+        new CustomError('Переданы некорректные данные при создании карточки'),
       );
     }
     return next(error);
@@ -46,7 +45,7 @@ const deleteCard = async (req, res, next) => {
   } catch (error) {
     if (error.name === 'CastError') {
       return next(
-        new CastError('Переданы некорректные данные для удаления карточки'),
+        new CustomError('Переданы некорректные данные для удаления карточки'),
       );
     }
     return next(error);
@@ -67,7 +66,7 @@ const likeCard = async (req, res, next) => {
   } catch (error) {
     if (error.name === 'CastError') {
       return next(
-        new CastError('Переданы некорректные данные для постановки лайка'),
+        new CustomError('Переданы некорректные данные для постановки лайка'),
       );
     }
     return next(error);
@@ -88,7 +87,7 @@ const dislikeCard = async (req, res, next) => {
   } catch (error) {
     if (error.name === 'CastError') {
       return next(
-        new CastError('Переданы некорректные данные для снятия лайка'),
+        new CustomError('Переданы некорректные данные для снятия лайка'),
       );
     }
     return next(error);

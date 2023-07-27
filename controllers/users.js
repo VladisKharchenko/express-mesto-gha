@@ -2,8 +2,7 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const User = require('../models/user');
 const NotFoundError = require('../errors/not-found-err');
-const CastError = require('../errors/cast-err');
-const ValidationError = require('../errors/validation-err');
+const CustomError = require('../errors/custom-err');
 const UnauthorizedError = require('../errors/unauthorized-err');
 
 const CREATED_SUCCESSFULLY = 201;
@@ -27,7 +26,7 @@ const getUserById = async (req, res, next) => {
     return res.json(user);
   } catch (error) {
     if (error.name === 'CastError') {
-      return next(new CastError('Некорректный формат _id пользователя'));
+      return next(new CustomError('Некорректный формат _id пользователя'));
     }
     return next(error);
   }
@@ -57,7 +56,7 @@ const createUser = async (req, res, next) => {
   } catch (error) {
     if (error.name === 'ValidationError') {
       return next(
-        new ValidationError('Переданы некорректные данные при регистрации'),
+        new CustomError('Переданы некорректные данные при регистрации'),
       );
     }
     return next(error);
@@ -79,7 +78,7 @@ const updateUserProfile = async (req, res, next) => {
   } catch (error) {
     if (error.name === 'ValidationError') {
       return next(
-        new ValidationError('Ошибка валидации данных при обновлении профиля'),
+        new CustomError('Ошибка валидации данных при обновлении профиля'),
       );
     }
     return next(error);
@@ -101,7 +100,7 @@ const updateUserAvatar = async (req, res, next) => {
   } catch (error) {
     if (error.name === 'ValidationError') {
       return next(
-        new ValidationError('Ошибка валидации данных при обновлении аватара'),
+        new CustomError('Ошибка валидации данных при обновлении аватара'),
       );
     }
     return next(error);
